@@ -14,7 +14,7 @@ function M.setup(opts)
 
     vim.api.nvim_set_hl(0, 'CelebrimborGhost', {
         fg = '#6b7089',
-        italic = false
+        default = true,
     })
 
     M.setup_keymaps()

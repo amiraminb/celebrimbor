@@ -45,7 +45,7 @@ function M.show(text)
 
   local virt_lines = {}
   for _, line in ipairs(lines) do
-    table.insert(virt_lines, { { line, 'CelerimborGhost' } })
+    table.insert(virt_lines, { { line, 'CelebrimborGhost' } })
   end
 
   M.state.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, M.ns, row, 0, {
@@ -115,7 +115,7 @@ function M.refresh_display()
 
   local virt_lines = {}
   for i = M.state.accepted_count + 1, #M.state.lines do
-    table.insert(virt_lines, { { M.state.lines[i], 'CelerimborGhost' } })
+    table.insert(virt_lines, { { M.state.lines[i], 'CelebrimborGhost' } })
   end
 
   if #virt_lines == 0 then
