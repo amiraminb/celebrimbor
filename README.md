@@ -16,14 +16,16 @@ In the depths of Eregion, the greatest elven smith of the Second Age labored at 
 
 - **Ghost text suggestions** - AI-generated code appears as dimmed virtual text
 - **Line-by-line acceptance** - Accept entire suggestions or one line at a time
-- **Context-aware generation** - Uses Treesitter to understand function signatures, imports, types, and surrounding code
+- **Rich context gathering** - Current file, harpoon files, neighboring files, imported local packages
+- **Partial function support** - Continue implementing functions with existing code
 - **AWS Bedrock integration** - Leverages Claude via your existing AWS infrastructure
 
 ## Requirements
 
 - Neovim 0.10+
 - AWS CLI configured with Bedrock access
-- nvim-treesitter 
+- nvim-treesitter
+- harpoon (optional, for marked files context) 
 
 ## Installation
 
@@ -51,7 +53,7 @@ export CELEBRIMBOR_MODEL="us.anthropic.claude-sonnet-4-20250514-v1:0"
 Optional:
 
 ```bash
-export CELEBRIMBOR_MAX_TOKENS="5120"
+export CELEBRIMBOR_MAX_TOKENS="1024"
 export CELEBRIMBOR_AWS_CLI_PATH="/path/to/aws"  # Auto-detected if not set
 ```
 
@@ -74,7 +76,7 @@ require('celebrimbor').setup({
 ## Usage
 
 1. Write a function signature in a Go file
-2. Position your cursor inside the empty function body
+2. Position your cursor inside the function body (empty or partial)
 3. Press `<leader>cg` to trigger code generation
 4. Ghost text appears with the suggested implementation
 5. Press `<Tab>` to accept all, `<leader>cl` to accept line-by-line, or `<Esc>` to dismiss
@@ -94,10 +96,9 @@ Run `:checkhealth celebrimbor` to verify your setup.
 ## Roadmap
 
 ### Core Features
-- [ ] Enhance context gathering (more file context, cross-file LSP references)
-- [ ] Support partial function bodies (use existing code as context, generate the rest)
 - [ ] Multiple suggestions (cycle through alternatives with `<leader>cn`/`<leader>cp`)
 - [ ] Auto-suggest on typing pause (Copilot-style, opt-in)
+- [ ] Embeddings for relevance ranking (smarter context selection)
 
 ### New Capabilities
 - [ ] Generate docstrings - Add doc comments for functions

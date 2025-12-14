@@ -7,6 +7,8 @@ Output rules:
 - NO markdown, NO explanations, NO comments unless essential
 - NO function signature, NO opening/closing braces
 - Start directly with the first line of implementation
+- If existing code is provided, return ONLY the NEW code to add (continuation)
+- Do NOT repeat existing code
 
 Go patterns to follow:
 - Handle errors immediately after they occur: if err != nil { return ..., err }
@@ -17,26 +19,47 @@ Go patterns to follow:
 - Use context.Context as first parameter when passed
 - Return zero values with errors: return nil, err or return "", err]]
 
+local function add_section(parts, title, content)
+  if content and content ~= '' then
+    table.insert(parts, title .. ':')
+    table.insert(parts, content)
+    table.insert(parts, '')
+  end
+end
+
+local function add_file_section(parts, title, files)
+  if not files or #files == 0 then
+    return
+  end
+
+  table.insert(parts, title .. ':')
+  for _, f in ipairs(files) do
+    table.insert(parts, string.format('--- %s ---', f.name))
+    table.insert(parts, f.content)
+    table.insert(parts, '')
+  end
+end
+
 function M.build(ctx)
   local parts = {}
 
   table.insert(parts, string.format('Package: %s | File: %s', ctx.package_name or 'unknown', ctx.file_name))
   table.insert(parts, '')
 
-  if ctx.imports then
-    table.insert(parts, 'Imports:')
-    table.insert(parts, ctx.imports)
-    table.insert(parts, '')
-  end
+  add_section(parts, 'Current file', ctx.current_file)
+
+  add_file_section(parts, 'Harpoon files', ctx.harpoon_files)
+
+  add_file_section(parts, 'Neighboring files', ctx.neighboring_files)
+
+  add_file_section(parts, 'Imported local packages', ctx.imported_files)
 
   if ctx.type_definition then
-    table.insert(parts, 'Type definition:')
-    table.insert(parts, ctx.type_definition)
-    table.insert(parts, '')
+    add_section(parts, 'Type definition', ctx.type_definition)
   end
 
   if ctx.other_functions and #ctx.other_functions > 0 then
-    table.insert(parts, 'Related functions:')
+    table.insert(parts, 'Other functions in file:')
     for _, sig in ipairs(ctx.other_functions) do
       table.insert(parts, sig)
     end
@@ -44,19 +67,25 @@ function M.build(ctx)
   end
 
   if ctx.comment then
-    table.insert(parts, 'Documentation:')
-    table.insert(parts, ctx.comment)
-    table.insert(parts, '')
+    add_section(parts, 'Documentation', ctx.comment)
   end
 
   if ctx.user_context then
-    table.insert(parts, 'Ultimate Goal (not for this function but in general):')
-    table.insert(parts, ctx.user_context)
-    table.insert(parts, '')
+    add_section(parts, 'Ultimate Goal', ctx.user_context)
   end
 
-  table.insert(parts, 'Implement:')
-  table.insert(parts, ctx.signature)
+  if ctx.body_content then
+    table.insert(parts, 'Complete this function (continue from existing code):')
+    table.insert(parts, ctx.signature)
+    table.insert(parts, '')
+    table.insert(parts, 'Existing code in function body:')
+    table.insert(parts, ctx.body_content)
+    table.insert(parts, '')
+    table.insert(parts, 'Continue implementation from here (do NOT repeat existing code):')
+  else
+    table.insert(parts, 'Implement this function:')
+    table.insert(parts, ctx.signature)
+  end
 
   return table.concat(parts, '\n')
 end

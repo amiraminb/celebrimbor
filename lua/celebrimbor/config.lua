@@ -21,7 +21,7 @@ M.defaults = {
     cli_path = nil,
   },
   model = nil,
-  max_tokens = tonumber(vim.env.CELEBRIMBOR_MAX_TOKENS) or 5120,
+  max_tokens = tonumber(vim.env.CELEBRIMBOR_MAX_TOKENS) or 1024,
   keymaps = {
     trigger = '<leader>cg',
     accept_all = '<Tab>',

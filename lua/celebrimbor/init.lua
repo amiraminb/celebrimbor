@@ -101,11 +101,6 @@ function M.generate()
       return
     end
 
-    if not ctx.is_empty then
-      vim.notify('Celebrimbor: Function body is not empty', vim.log.levels.INFO)
-      return
-    end
-
     spinner.start()
 
     ctx.user_context = M.user_context

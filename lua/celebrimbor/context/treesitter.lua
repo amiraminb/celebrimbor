@@ -62,6 +62,20 @@ function M.is_body_empty(body_node)
   return vim.trim(inner) == ''
 end
 
+function M.get_body_content(body_node)
+  if not body_node then
+    return nil
+  end
+
+  local text = vim.treesitter.get_node_text(body_node, 0)
+  local inner = text:gsub('^%s*{\n?', ''):gsub('\n?%s*}%s*$', '')
+  local trimmed = vim.trim(inner)
+  if trimmed == '' then
+    return nil
+  end
+  return inner
+end
+
 function M.get_preceding_comment(func_node)
   if not func_node then
     return nil
@@ -102,6 +116,7 @@ function M.get_function_context()
   return {
     signature = M.get_function_signature(func_node),
     is_empty = M.is_body_empty(body),
+    body_content = M.get_body_content(body),
     comment = M.get_preceding_comment(func_node),
     receiver_type = M.get_receiver_type(func_node),
     is_method = func_node:type() == 'method_declaration',
