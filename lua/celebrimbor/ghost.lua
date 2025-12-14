@@ -9,6 +9,7 @@ M.state = {
   bufnr = nil,
   start_row = nil,
   extmark_id = nil,
+  above = false,
 }
 
 function M.clear()
@@ -23,15 +24,17 @@ function M.clear()
     bufnr = nil,
     start_row = nil,
     extmark_id = nil,
+    above = false,
   }
 end
 
-function M.show(text)
+function M.show(text, opts)
   M.clear()
 
+  opts = opts or {}
   local bufnr = vim.api.nvim_get_current_buf()
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local row = cursor[1] - 1
+  local row = opts.row or (vim.api.nvim_win_get_cursor(0)[1] - 1)
+  local above = opts.above or false
 
   local lines = vim.split(text, '\n', { plain = true })
 
@@ -50,14 +53,15 @@ function M.show(text)
 
   M.state.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, M.ns, row, 0, {
     virt_lines = virt_lines,
-    virt_lines_above = false,
+    virt_lines_above = above,
   })
 
   M.state.active = true
   M.state.lines = lines
   M.state.accepted_count = 0
   M.state.bufnr = bufnr
-  M.state.start_row = row + 1
+  M.state.start_row = row
+  M.state.above = above
 end
 
 function M.accept_all()
@@ -66,7 +70,7 @@ function M.accept_all()
   end
 
   local bufnr = M.state.bufnr
-  local start_row = M.state.start_row
+  local insert_row = M.state.above and M.state.start_row or (M.state.start_row + 1)
 
   local remaining = {}
   for i = M.state.accepted_count + 1, #M.state.lines do
@@ -74,7 +78,7 @@ function M.accept_all()
   end
 
   if #remaining > 0 then
-    vim.api.nvim_buf_set_lines(bufnr, start_row, start_row, false, remaining)
+    vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, remaining)
   end
 
   M.clear()
@@ -88,12 +92,22 @@ function M.accept_line()
   end
 
   local bufnr = M.state.bufnr
-  local insert_row = M.state.start_row + M.state.accepted_count
+  local insert_row
+  if M.state.above then
+    insert_row = M.state.start_row + M.state.accepted_count
+  else
+    insert_row = M.state.start_row + 1 + M.state.accepted_count
+  end
+
   local next_line = M.state.lines[M.state.accepted_count + 1]
 
   vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, { next_line })
 
   M.state.accepted_count = M.state.accepted_count + 1
+
+  if M.state.above then
+    M.state.start_row = M.state.start_row + 1
+  end
 
   if M.state.accepted_count >= #M.state.lines then
     M.clear()
@@ -123,11 +137,11 @@ function M.refresh_display()
     return
   end
 
-  local row = M.state.start_row + M.state.accepted_count - 1
+  local row = M.state.start_row
 
   M.state.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, M.ns, row, 0, {
     virt_lines = virt_lines,
-    virt_lines_above = false,
+    virt_lines_above = M.state.above,
   })
 end
 

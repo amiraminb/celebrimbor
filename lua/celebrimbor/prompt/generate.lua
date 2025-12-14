@@ -99,8 +99,4 @@ function M.build_messages(ctx)
   }
 end
 
-function M.get_system_prompt()
-  return M.system_prompt
-end
-
 return M

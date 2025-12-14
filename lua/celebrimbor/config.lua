@@ -30,6 +30,7 @@ M.defaults = {
     prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
     set_context = '<leader>cs',
+    docstring = '<leader>cd',
   },
 }
 

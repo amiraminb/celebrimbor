@@ -18,6 +18,7 @@ In the depths of Eregion, the greatest elven smith of the Second Age labored at 
 - **Line-by-line acceptance** - Accept entire suggestions or one line at a time
 - **Rich context gathering** - Current file, harpoon files, neighboring files, imported local packages
 - **Partial function support** - Continue implementing functions with existing code
+- **Docstring generation** - Generate Go doc comments for functions
 - **AWS Bedrock integration** - Leverages Claude via your existing AWS infrastructure
 
 ## Requirements
@@ -69,6 +70,7 @@ require('celebrimbor').setup({
     prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
     set_context = '<leader>cs',
+    docstring = '<leader>cd',
   },
 })
 ```
@@ -86,8 +88,9 @@ require('celebrimbor').setup({
 | Command | Description |
 |---------|-------------|
 | `:Celebrimbor` | Trigger code generation |
+| `:CelebrimborDocstring` | Generate docstring for function |
 | `:CelerimborClear` | Clear current suggestion |
-| `:CelerimborHealth` | Check plugin health |
+| `:CelebrimborHealth` | Check plugin health |
 
 ## Health Check
 
@@ -101,7 +104,6 @@ Run `:checkhealth celebrimbor` to verify your setup.
 - [ ] Embeddings for relevance ranking (smarter context selection)
 
 ### New Capabilities
-- [ ] Generate docstrings - Add doc comments for functions
 - [ ] Fix diagnostics - Use LSP errors as context, generate fix
 - [ ] Generate from comments - Write a TODO comment, generate implementation
 
