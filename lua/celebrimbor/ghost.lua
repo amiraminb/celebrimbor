@@ -35,6 +35,8 @@ function M.show(text, opts)
   local bufnr = vim.api.nvim_get_current_buf()
   local row = opts.row or (vim.api.nvim_win_get_cursor(0)[1] - 1)
   local above = opts.above or false
+  local index = opts.index
+  local total = opts.total
 
   local lines = vim.split(text, '\n', { plain = true })
 
@@ -47,6 +49,12 @@ function M.show(text, opts)
   end
 
   local virt_lines = {}
+
+  if index and total and total > 1 and index < total then
+    local indicator = string.format('[%d/%d]', index, total)
+    table.insert(virt_lines, { { indicator, 'CelebrimborGhost' } })
+  end
+
   for _, line in ipairs(lines) do
     table.insert(virt_lines, { { line, 'CelebrimborGhost' } })
   end

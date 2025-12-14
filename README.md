@@ -19,6 +19,7 @@ In the depths of Eregion, the greatest elven smith of the Second Age labored at 
 - **Rich context gathering** - Current file, harpoon files, neighboring files, imported local packages
 - **Partial function support** - Continue implementing functions with existing code
 - **Docstring generation** - Generate Go doc comments for functions
+- **Multiple suggestions** - Cycle through alternative implementations
 - **AWS Bedrock integration** - Leverages Claude via your existing AWS infrastructure
 
 ## Requirements
@@ -99,9 +100,9 @@ Run `:checkhealth celebrimbor` to verify your setup.
 ## Roadmap
 
 ### Core Features
-- [ ] Multiple suggestions (cycle through alternatives with `<leader>cn`/`<leader>cp`)
 - [ ] Auto-suggest on typing pause (Copilot-style, opt-in)
 - [ ] Embeddings for relevance ranking (smarter context selection)
+- [ ] Smarter multiple suggestions
 
 ### New Capabilities
 - [ ] Fix diagnostics - Use LSP errors as context, generate fix

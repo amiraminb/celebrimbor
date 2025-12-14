@@ -6,6 +6,7 @@ local context = require('celebrimbor.context')
 local prompt = require('celebrimbor.prompt')
 local ghost = require('celebrimbor.ghost')
 local spinner = require('celebrimbor.spinner')
+local suggestions = require('celebrimbor.suggestions')
 
 M.user_context = nil
 
@@ -49,6 +50,7 @@ function M.setup_keymaps()
   vim.keymap.set('n', keymaps.accept_all, function()
     if ghost.is_active() then
       ghost.accept_all()
+      suggestions.clear()
     else
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Tab>', true, false, true), 'n', false)
     end
@@ -69,11 +71,15 @@ function M.setup_keymaps()
   end, { desc = 'Celebrimbor: Dismiss' })
 
   vim.keymap.set('n', keymaps.next_suggestion, function()
-    vim.notify('Celebrimbor: Next suggestion not implemented yet', vim.log.levels.INFO)
+    if ghost.is_active() then
+      M.next_suggestion()
+    end
   end, { desc = 'Celebrimbor: Next suggestion' })
 
   vim.keymap.set('n', keymaps.prev_suggestion, function()
-    vim.notify('Celebrimbor: Previous suggestion not implemented yet', vim.log.levels.INFO)
+    if ghost.is_active() then
+      M.prev_suggestion()
+    end
   end, { desc = 'Celebrimbor: Previous suggestion' })
 
   vim.keymap.set('n', keymaps.set_context, function()
@@ -101,6 +107,7 @@ function M.generate()
     return
   end
 
+  suggestions.clear()
   spinner.start()
 
   ctx.user_context = M.user_context
@@ -116,7 +123,79 @@ function M.generate()
       return
     end
 
-    ghost.show(result.content)
+    suggestions.add(result.content, ctx, { above = false }, 'generate')
+    M.show_current_suggestion()
+  end)
+end
+
+function M.show_current_suggestion()
+  local content = suggestions.current()
+  if not content then
+    return
+  end
+
+  local opts = suggestions.get_opts() or {}
+  opts.index = suggestions.get_index()
+  opts.total = suggestions.count()
+
+  ghost.show(content, opts)
+end
+
+function M.next_suggestion()
+  if not suggestions.is_active() then
+    return
+  end
+
+  local content, need_generate = suggestions.next()
+
+  if need_generate then
+    M.generate_alternative()
+  elseif content then
+    M.show_current_suggestion()
+  end
+end
+
+function M.prev_suggestion()
+  if not suggestions.is_active() then
+    return
+  end
+
+  local content = suggestions.prev()
+  if content then
+    M.show_current_suggestion()
+  end
+end
+
+function M.generate_alternative()
+  local ctx = suggestions.get_context()
+  if not ctx then
+    return
+  end
+
+  spinner.start()
+
+  local messages = prompt.generate.build_messages(ctx)
+  table.insert(messages, {
+    role = 'assistant',
+    content = suggestions.current(),
+  })
+  table.insert(messages, {
+    role = 'user',
+    content = 'Generate a different implementation. Use a different approach or algorithm.',
+  })
+
+  bedrock.invoke_async(messages, {
+    system = prompt.generate.system_prompt,
+  }, function(result, api_err)
+    spinner.stop()
+
+    if api_err then
+      vim.notify('Celebrimbor: ' .. tostring(api_err), vim.log.levels.ERROR)
+      return
+    end
+
+    suggestions.add(result.content, ctx, suggestions.get_opts(), 'generate')
+    M.show_current_suggestion()
   end)
 end
 
@@ -167,6 +246,7 @@ end
 
 function M.clear()
   ghost.clear()
+  suggestions.clear()
 end
 
 return M
