@@ -23,11 +23,11 @@ M.defaults = {
   model = nil,
   max_tokens = tonumber(vim.env.CELEBRIMBOR_MAX_TOKENS) or 5120,
   keymaps = {
-    trigger = '<C-g>',
+    trigger = '<leader>cg',
     accept_all = '<Tab>',
-    accept_line = '<C-l>',
-    next_suggestion = '<C-]>',
-    prev_suggestion = '<C-[>',
+    accept_line = '<leader>cl',
+    next_suggestion = '<leader>cn',
+    prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
   },
 }

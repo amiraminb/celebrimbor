@@ -60,11 +60,11 @@ export CELEBRIMBOR_AWS_CLI_PATH="/path/to/aws"  # Auto-detected if not set
 ```lua
 require('celebrimbor').setup({
   keymaps = {
-    trigger = '<C-g>',
+    trigger = '<leader>cg',
     accept_all = '<Tab>',
-    accept_line = '<C-l>',
-    next_suggestion = '<C-]>',
-    prev_suggestion = '<C-[>',
+    accept_line = '<leader>cl',
+    next_suggestion = '<leader>cn',
+    prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
   },
 })
@@ -74,9 +74,9 @@ require('celebrimbor').setup({
 
 1. Write a function signature in a Go file
 2. Position your cursor inside the empty function body
-3. Press `<C-g>` to trigger code generation
+3. Press `<leader>cg` to trigger code generation
 4. Ghost text appears with the suggested implementation
-5. Press `<Tab>` to accept all, `<C-l>` to accept line-by-line, or `<Esc>` to dismiss
+5. Press `<Tab>` to accept all, `<leader>cl` to accept line-by-line, or `<Esc>` to dismiss
 
 ## Commands
 

@@ -5,6 +5,7 @@ local bedrock = require('celebrimbor.bedrock')
 local context = require('celebrimbor.context')
 local prompt = require('celebrimbor.prompt')
 local ghost = require('celebrimbor.ghost')
+local spinner = require('celebrimbor.spinner')
 
 function M.setup(opts)
     config.setup(opts)
@@ -62,48 +63,49 @@ function M.setup_keymaps()
       if ghost.is_active() then
         ghost.clear()
       else
-        -- Fall back to default Esc behavior
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
       end
     end, { desc = 'Celebrimbor: Dismiss' })
+
+    -- Next suggestion (not implemented)
+    vim.keymap.set('n', keymaps.next_suggestion, function()
+      vim.notify('Celebrimbor: Next suggestion not implemented yet', vim.log.levels.INFO)
+    end, { desc = 'Celebrimbor: Next suggestion' })
+
+    -- Previous suggestion (not implemented)
+    vim.keymap.set('n', keymaps.prev_suggestion, function()
+      vim.notify('Celebrimbor: Previous suggestion not implemented yet', vim.log.levels.INFO)
+    end, { desc = 'Celebrimbor: Previous suggestion' })
 end
 
 function M.generate()
-    -- Gather context
     local ctx, err = context.gather()
     if not ctx then
       vim.notify('Celebrimbor: ' .. (err or 'Could not gather context'), vim.log.levels.WARN)
       return
     end
 
-    -- Check if function body is empty
     if not ctx.is_empty then
       vim.notify('Celebrimbor: Function body is not empty', vim.log.levels.INFO)
       return
     end
 
-    vim.notify('Celebrimbor: Generating...', vim.log.levels.INFO)
+    spinner.start()
 
-    -- Build prompt
     local messages = prompt.build_messages(ctx)
 
-    -- Call Bedrock (this blocks - we'll make it async later if needed)
-    local ok, result = pcall(function()
-      return bedrock.invoke(messages, {
-        system = prompt.get_system_prompt(),
-      })
+    bedrock.invoke_async(messages, {
+      system = prompt.get_system_prompt(),
+    }, function(result, api_err)
+      spinner.stop()
+
+      if api_err then
+        vim.notify('Celebrimbor: ' .. tostring(api_err), vim.log.levels.ERROR)
+        return
+      end
+
+      ghost.show(result.content)
     end)
-
-    if not ok then
-      vim.notify('Celebrimbor: ' .. tostring(result), vim.log.levels.ERROR)
-      return
-    end
-
-    -- Display as ghost text
-    ghost.show(result.content)
-
-    vim.notify(string.format('Celebrimbor: Generated %d lines (Tab=accept all, Ctrl-L=accept line, Esc=dismiss)',
-      #vim.split(result.content, '\n')), vim.log.levels.INFO)
 end
 
 function M.clear()

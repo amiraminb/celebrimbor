@@ -3,6 +3,79 @@ local M = {}
 local config = require('celebrimbor.config')
 local auth = require('celebrimbor.auth')
 
+function M.invoke_async(messages, opts, callback)
+  opts = opts or {}
+
+  local ok, cred_err = pcall(auth.get_credentials)
+  if not ok then
+    callback(nil, cred_err)
+    return
+  end
+
+  local aws_cli = config.options.aws.cli_path
+  local profile = config.options.aws.profile
+  local region = config.options.aws.region
+  local model = opts.model or config.options.model
+  local max_tokens = opts.max_tokens or config.options.max_tokens
+
+  local request = {
+    anthropic_version = 'bedrock-2023-05-31',
+    max_tokens = max_tokens,
+    messages = messages,
+  }
+
+  if opts.system then
+    request.system = opts.system
+  end
+
+  local body = vim.json.encode(request)
+  local tmpfile = os.tmpname()
+
+  vim.system({
+    aws_cli, 'bedrock-runtime', 'invoke-model',
+    '--model-id', model,
+    '--body', body,
+    '--profile', profile,
+    '--region', region,
+    '--cli-binary-format', 'raw-in-base64-out',
+    tmpfile,
+  }, { text = true }, function(result)
+    vim.schedule(function()
+      if result.code ~= 0 then
+        os.remove(tmpfile)
+        callback(nil, 'Bedrock API error: ' .. (result.stderr or 'unknown error'))
+        return
+      end
+
+      local file = io.open(tmpfile, 'r')
+      if not file then
+        os.remove(tmpfile)
+        callback(nil, 'Failed to read Bedrock response')
+        return
+      end
+
+      local response_text = file:read('*a')
+      file:close()
+      os.remove(tmpfile)
+
+      local decode_ok, response = pcall(vim.json.decode, response_text)
+      if not decode_ok then
+        callback(nil, 'Failed to parse response')
+        return
+      end
+
+      callback({
+        content = response.content[1].text,
+        usage = {
+          input_tokens = response.usage.input_tokens,
+          output_tokens = response.usage.output_tokens,
+        },
+        stop_reason = response.stop_reason,
+      }, nil)
+    end)
+  end)
+end
+
 function M.invoke(messages, opts)
   opts = opts or {}
 
