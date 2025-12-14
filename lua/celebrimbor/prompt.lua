@@ -1,52 +1,56 @@
 local M = {}
 
-M.system_prompt = [[You are an expert Go developer. Your task is to implement function bodies based on the signature and context provided.
+M.system_prompt = [[You are an expert Go developer implementing function bodies. You receive a function signature and context, and return ONLY the implementation code.
 
-Rules:
-- Return ONLY the function body code (the content that goes inside the braces)
-- Do NOT include the function signature or braces
-- Do NOT include markdown code fences or explanations
-- Match the coding style of the surrounding code
-- Use proper error handling patterns
-- Keep implementations concise but complete]]
+Output rules:
+- Return ONLY the code that goes inside the function braces
+- NO markdown, NO explanations, NO comments unless essential
+- NO function signature, NO opening/closing braces
+- Start directly with the first line of implementation
+
+Go patterns to follow:
+- Handle errors immediately after they occur: if err != nil { return ..., err }
+- Use early returns to reduce nesting
+- Initialize variables close to their usage
+- Use meaningful variable names (not single letters except for loops/receivers)
+- Prefer table-driven tests patterns when applicable
+- Use context.Context as first parameter when passed
+- Return zero values with errors: return nil, err or return "", err]]
 
 function M.build(ctx)
   local parts = {}
 
-  table.insert(parts, string.format('File: %s', ctx.file_name))
-  table.insert(parts, string.format('Package: %s', ctx.package_name or 'unknown'))
+  table.insert(parts, string.format('Package: %s | File: %s', ctx.package_name or 'unknown', ctx.file_name))
   table.insert(parts, '')
 
   if ctx.imports then
-    table.insert(parts, '// Available imports:')
+    table.insert(parts, 'Imports:')
     table.insert(parts, ctx.imports)
     table.insert(parts, '')
   end
 
   if ctx.type_definition then
-    table.insert(parts, '// Receiver type:')
+    table.insert(parts, 'Type definition:')
     table.insert(parts, ctx.type_definition)
     table.insert(parts, '')
   end
 
   if ctx.other_functions and #ctx.other_functions > 0 then
-    table.insert(parts, '// Other functions in this file:')
+    table.insert(parts, 'Related functions:')
     for _, sig in ipairs(ctx.other_functions) do
-      table.insert(parts, '// ' .. sig)
+      table.insert(parts, sig)
     end
     table.insert(parts, '')
   end
 
   if ctx.comment then
-    table.insert(parts, '// Documentation:')
+    table.insert(parts, 'Documentation:')
     table.insert(parts, ctx.comment)
     table.insert(parts, '')
   end
 
-  table.insert(parts, '// Implement this function:')
-  table.insert(parts, ctx.signature .. ' {')
-  table.insert(parts, '  // YOUR IMPLEMENTATION HERE')
-  table.insert(parts, '}')
+  table.insert(parts, 'Implement:')
+  table.insert(parts, ctx.signature)
 
   return table.concat(parts, '\n')
 end
