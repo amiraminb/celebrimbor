@@ -45,6 +45,7 @@ function M.show(text, opts)
   end
 
   if #lines == 0 then
+    vim.notify('Celebrimbor: No content to display', vim.log.levels.DEBUG)
     return
   end
 
@@ -112,10 +113,7 @@ function M.accept_line()
   vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, { next_line })
 
   M.state.accepted_count = M.state.accepted_count + 1
-
-  if M.state.above then
-    M.state.start_row = M.state.start_row + 1
-  end
+  M.state.start_row = M.state.start_row + 1
 
   if M.state.accepted_count >= #M.state.lines then
     M.clear()

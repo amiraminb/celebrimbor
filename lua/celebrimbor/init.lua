@@ -113,6 +113,8 @@ function M.generate()
   ctx.user_context = M.user_context
   local messages = prompt.generate.build_messages(ctx)
 
+  local insert_row = M.get_insert_row(ctx)
+
   bedrock.invoke_async(messages, {
     system = prompt.generate.system_prompt,
   }, function(result, api_err)
@@ -123,9 +125,36 @@ function M.generate()
       return
     end
 
-    suggestions.add(result.content, ctx, { above = false }, 'generate')
+    if not result.content or result.content == '' then
+      vim.notify('Celebrimbor: Empty response from API', vim.log.levels.WARN)
+      return
+    end
+
+    local trimmed = vim.trim(result.content)
+    if trimmed == '' then
+      vim.notify('Celebrimbor: Response contains only whitespace', vim.log.levels.WARN)
+      return
+    end
+
+    suggestions.add(result.content, ctx, { above = false, row = insert_row }, 'generate')
     M.show_current_suggestion()
   end)
+end
+
+function M.get_insert_row(ctx)
+  local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+  if not ctx.body_node then
+    return cursor_row
+  end
+
+  local body_start = ctx.body_node:start()
+
+  if ctx.is_empty then
+    return body_start
+  end
+
+  return cursor_row
 end
 
 function M.show_current_suggestion()
@@ -168,6 +197,7 @@ end
 
 function M.generate_alternative()
   local ctx = suggestions.get_context()
+  local opts = suggestions.get_opts()
   if not ctx then
     return
   end
@@ -194,7 +224,7 @@ function M.generate_alternative()
       return
     end
 
-    suggestions.add(result.content, ctx, suggestions.get_opts(), 'generate')
+    suggestions.add(result.content, ctx, opts, 'generate')
     M.show_current_suggestion()
   end)
 end
