@@ -111,4 +111,5 @@ Run `:checkhealth celebrimbor` to verify your setup.
 ### Future Vision
 - [ ] LSP server - Standalone Language Server Protocol implementation
 - [ ] Multi-language support - Python, TypeScript, Rust, and more
+- [ ] Multiple AI providers - OpenAI, Anthropic API, Ollama, and other backends
 
