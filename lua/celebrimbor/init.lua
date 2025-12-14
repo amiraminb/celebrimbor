@@ -7,6 +7,8 @@ local prompt = require('celebrimbor.prompt')
 local ghost = require('celebrimbor.ghost')
 local spinner = require('celebrimbor.spinner')
 
+M.user_context = nil
+
 function M.setup(opts)
     config.setup(opts)
 
@@ -76,6 +78,20 @@ function M.setup_keymaps()
     vim.keymap.set('n', keymaps.prev_suggestion, function()
       vim.notify('Celebrimbor: Previous suggestion not implemented yet', vim.log.levels.INFO)
     end, { desc = 'Celebrimbor: Previous suggestion' })
+
+    -- Set user context
+    vim.keymap.set('n', keymaps.set_context, function()
+      vim.ui.input({ prompt = 'Celebrimbor context: ', default = M.user_context or '' }, function(input)
+        if input then
+          M.user_context = input ~= '' and input or nil
+          if M.user_context then
+            vim.notify('Celebrimbor: Context set', vim.log.levels.INFO)
+          else
+            vim.notify('Celebrimbor: Context cleared', vim.log.levels.INFO)
+          end
+        end
+      end)
+    end, { desc = 'Celebrimbor: Set context' })
 end
 
 function M.generate()
@@ -92,6 +108,7 @@ function M.generate()
 
     spinner.start()
 
+    ctx.user_context = M.user_context
     local messages = prompt.build_messages(ctx)
 
     bedrock.invoke_async(messages, {

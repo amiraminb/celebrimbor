@@ -29,6 +29,7 @@ M.defaults = {
     next_suggestion = '<leader>cn',
     prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
+    set_context = '<leader>cs',
   },
 }
 

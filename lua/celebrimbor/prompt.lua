@@ -49,6 +49,12 @@ function M.build(ctx)
     table.insert(parts, '')
   end
 
+  if ctx.user_context then
+    table.insert(parts, 'Ultimate Goal (not for this function but in general):')
+    table.insert(parts, ctx.user_context)
+    table.insert(parts, '')
+  end
+
   table.insert(parts, 'Implement:')
   table.insert(parts, ctx.signature)
 
