@@ -91,3 +91,20 @@ require('celebrimbor').setup({
 
 Run `:checkhealth celebrimbor` to verify your setup.
 
+## Roadmap
+
+### Core Features
+- [ ] Enhance context gathering (more file context, cross-file LSP references)
+- [ ] Support partial function bodies (use existing code as context, generate the rest)
+- [ ] Multiple suggestions (cycle through alternatives with `<leader>cn`/`<leader>cp`)
+- [ ] Auto-suggest on typing pause (Copilot-style, opt-in)
+
+### New Capabilities
+- [ ] Generate docstrings - Add doc comments for functions
+- [ ] Fix diagnostics - Use LSP errors as context, generate fix
+- [ ] Generate from comments - Write a TODO comment, generate implementation
+
+### Future Vision
+- [ ] LSP server - Standalone Language Server Protocol implementation
+- [ ] Multi-language support - Python, TypeScript, Rust, and more
+
