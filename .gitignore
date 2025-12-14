@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Neovim
+*.swp
+*.swo
+*~
+
+# Lua
+*.luac
+
+# Tags
+tags
+TAGS
+
+# IDE
+.idea/
+.vscode/
+
+# Local development
+.env
+.env.local
