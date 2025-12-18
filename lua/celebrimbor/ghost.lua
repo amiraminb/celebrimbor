@@ -136,9 +136,9 @@ function M.accept_line()
   local bufnr = M.state.bufnr
   local insert_row
   if M.state.above then
-    insert_row = M.state.start_row + M.state.accepted_count
+    insert_row = M.state.start_row
   else
-    insert_row = M.state.start_row + 1 + M.state.accepted_count
+    insert_row = M.state.start_row + 1
   end
 
   local next_line = M.state.lines[M.state.accepted_count + 1]
