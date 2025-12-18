@@ -22,6 +22,7 @@ function M.setup(opts)
   })
 
   M.setup_keymaps()
+  M.setup_autocmds()
 
   vim.api.nvim_create_user_command('Celebrimbor', function()
     M.generate()
@@ -65,6 +66,7 @@ function M.setup_keymaps()
   vim.keymap.set('n', keymaps.dismiss, function()
     if ghost.is_active() then
       ghost.clear()
+      suggestions.clear()
     else
       vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
     end
@@ -98,6 +100,20 @@ function M.setup_keymaps()
   vim.keymap.set('n', keymaps.docstring, function()
     M.generate_docstring()
   end, { desc = 'Celebrimbor: Generate docstring' })
+end
+
+function M.setup_autocmds()
+  local group = vim.api.nvim_create_augroup('Celebrimbor', { clear = true })
+
+  vim.api.nvim_create_autocmd({ 'InsertEnter', 'TermEnter', 'BufLeave' }, {
+    group = group,
+    callback = function()
+      if ghost.is_active() then
+        ghost.clear()
+        suggestions.clear()
+      end
+    end,
+  })
 end
 
 function M.generate()
