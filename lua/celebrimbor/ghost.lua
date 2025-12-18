@@ -30,24 +30,29 @@ function M.clear()
   }
 end
 
-function M.get_base_indent(row, above)
-  local lines = vim.api.nvim_buf_get_lines(0, row, row + 2, false)
-  local current_line = lines[1] or ''
-  local next_line = lines[2] or ''
-
+function M.get_base_indent(row, above, body_start, body_end)
+  local current_line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1] or ''
   local current_indent = current_line:match('^(%s*)') or ''
 
   if above then
     return current_indent
   end
 
-  if current_line:match('{%s*$') then
-    local next_indent = next_line:match('^(%s*)') or ''
-    if #next_indent > #current_indent then
-      return next_indent
-    else
-      return current_indent .. '\t'
+  if body_start and body_end then
+    local body_lines = vim.api.nvim_buf_get_lines(0, body_start + 1, body_end, false)
+    for _, line in ipairs(body_lines) do
+      local trimmed = vim.trim(line)
+      if trimmed ~= '' and trimmed ~= '}' and trimmed ~= '{' then
+        return line:match('^(%s*)') or ''
+      end
     end
+    local brace_line = vim.api.nvim_buf_get_lines(0, body_start, body_start + 1, false)[1] or ''
+    local brace_indent = brace_line:match('^(%s*)') or ''
+    return brace_indent .. '\t'
+  end
+
+  if current_line:match('{%s*$') then
+    return current_indent .. '\t'
   end
 
   return current_indent
@@ -62,7 +67,7 @@ function M.show(text, opts)
   local above = opts.above or false
   local index = opts.index
   local total = opts.total
-  local base_indent = opts.indent or M.get_base_indent(row, above)
+  local base_indent = opts.indent or M.get_base_indent(row, above, opts.body_start, opts.body_end)
 
   local lines = vim.split(text, '\n', { plain = true })
 

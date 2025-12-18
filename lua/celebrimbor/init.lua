@@ -152,7 +152,9 @@ function M.generate()
       return
     end
 
-    suggestions.add(result.content, ctx, { above = false, row = insert_row }, 'generate')
+    local body_start = ctx.body_node and ctx.body_node:start() or nil
+    local body_end = ctx.body_node and ctx.body_node:end_() or nil
+    suggestions.add(result.content, ctx, { above = false, row = insert_row, body_start = body_start, body_end = body_end }, 'generate')
     M.show_current_suggestion()
   end)
 end
