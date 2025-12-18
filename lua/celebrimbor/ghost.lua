@@ -10,6 +10,7 @@ M.state = {
   start_row = nil,
   extmark_id = nil,
   above = false,
+  indent = '',
 }
 
 function M.clear()
@@ -25,7 +26,27 @@ function M.clear()
     start_row = nil,
     extmark_id = nil,
     above = false,
+    indent = '',
   }
+end
+
+function M.get_base_indent(row)
+  local lines = vim.api.nvim_buf_get_lines(0, row, row + 2, false)
+  local current_line = lines[1] or ''
+  local next_line = lines[2] or ''
+
+  local current_indent = current_line:match('^(%s*)') or ''
+
+  if current_line:match('{%s*$') then
+    local next_indent = next_line:match('^(%s*)') or ''
+    if #next_indent > #current_indent then
+      return next_indent
+    else
+      return current_indent .. '\t'
+    end
+  end
+
+  return current_indent
 end
 
 function M.show(text, opts)
@@ -37,8 +58,15 @@ function M.show(text, opts)
   local above = opts.above or false
   local index = opts.index
   local total = opts.total
+  local base_indent = opts.indent or M.get_base_indent(row)
 
   local lines = vim.split(text, '\n', { plain = true })
+
+  for i, line in ipairs(lines) do
+    if line ~= '' then
+      lines[i] = base_indent .. line
+    end
+  end
 
   while #lines > 0 and lines[#lines] == '' do
     table.remove(lines)
@@ -71,6 +99,7 @@ function M.show(text, opts)
   M.state.bufnr = bufnr
   M.state.start_row = row
   M.state.above = above
+  M.state.indent = base_indent
 end
 
 function M.accept_all()
