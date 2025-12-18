@@ -30,12 +30,16 @@ function M.clear()
   }
 end
 
-function M.get_base_indent(row)
+function M.get_base_indent(row, above)
   local lines = vim.api.nvim_buf_get_lines(0, row, row + 2, false)
   local current_line = lines[1] or ''
   local next_line = lines[2] or ''
 
   local current_indent = current_line:match('^(%s*)') or ''
+
+  if above then
+    return current_indent
+  end
 
   if current_line:match('{%s*$') then
     local next_indent = next_line:match('^(%s*)') or ''
@@ -58,7 +62,7 @@ function M.show(text, opts)
   local above = opts.above or false
   local index = opts.index
   local total = opts.total
-  local base_indent = opts.indent or M.get_base_indent(row)
+  local base_indent = opts.indent or M.get_base_indent(row, above)
 
   local lines = vim.split(text, '\n', { plain = true })
 
