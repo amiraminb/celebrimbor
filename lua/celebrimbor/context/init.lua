@@ -148,4 +148,82 @@ function M.gather()
   }
 end
 
+-- Parse @ai instruction from a line
+-- Supports: // @ai ..., /* @ai ... */
+function M.parse_ai_instruction(line)
+  -- Try // @ai ...
+  local instruction = line:match('//%s*@ai%s+(.+)$')
+  if instruction then
+    return vim.trim(instruction)
+  end
+
+  -- Try /* @ai ... */
+  instruction = line:match('/%*%s*@ai%s+(.-)%s*%*/')
+  if instruction then
+    return vim.trim(instruction)
+  end
+
+  return nil
+end
+
+-- Gather context for inline @ai generation
+-- Uses the same context as regular gather() but adds the @ai instruction
+function M.gather_inline()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local ai_row = cursor[1] - 1 -- 0-indexed
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Get the current line and parse @ai instruction
+  local ai_line = vim.api.nvim_buf_get_lines(bufnr, ai_row, ai_row + 1, false)[1] or ''
+  local instruction = M.parse_ai_instruction(ai_line)
+  if not instruction then
+    return nil, 'No @ai instruction found on current line'
+  end
+
+  -- Get the standard context (function, comments, etc.)
+  local func_ctx = ts.get_function_context()
+  if not func_ctx then
+    return nil, 'Cursor is not inside a function'
+  end
+
+  local file_path = vim.fn.expand('%:p')
+  local file_name = vim.fn.expand('%:t')
+  local prefix, suffix = file_ctx.get_prefix_suffix(func_ctx.node)
+
+  return {
+    -- Standard context
+    signature = func_ctx.signature,
+    is_empty = func_ctx.is_empty,
+    body_content = func_ctx.body_content,
+    comment = func_ctx.comment,
+    is_method = func_ctx.is_method,
+    receiver_type = func_ctx.receiver_type,
+
+    file_path = file_path,
+    file_name = file_name,
+    package_name = M.get_package_name(),
+    language = 'go',
+
+    current_file = file_ctx.get_content(),
+    prefix = prefix,
+    suffix = suffix,
+
+    imports = M.get_imports(),
+    type_definition = func_ctx.receiver_type and M.get_type_definition(func_ctx.receiver_type),
+    other_functions = M.get_other_functions(func_ctx.node),
+
+    harpoon_files = harpoon_ctx.get_files(),
+    neighboring_files = neighbors_ctx.get_files(),
+    imported_files = imports_ctx.get_local_files(),
+
+    func_node = func_ctx.node,
+    body_node = func_ctx.body_node,
+
+    -- Inline-specific context
+    ai_instruction = instruction,
+    ai_row = ai_row,
+    ai_line = ai_line,
+  }
+end
+
 return M

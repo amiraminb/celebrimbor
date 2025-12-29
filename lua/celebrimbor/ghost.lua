@@ -11,6 +11,8 @@ M.state = {
   extmark_id = nil,
   above = false,
   indent = '',
+  replace_line = false,
+  line_replaced = false,
 }
 
 function M.clear()
@@ -27,6 +29,8 @@ function M.clear()
     extmark_id = nil,
     above = false,
     indent = '',
+    replace_line = false,
+    line_replaced = false,
   }
 end
 
@@ -109,6 +113,8 @@ function M.show(text, opts)
   M.state.start_row = row
   M.state.above = above
   M.state.indent = base_indent
+  M.state.replace_line = opts.replace_line or false
+  M.state.line_replaced = false
 end
 
 function M.accept_all()
@@ -117,7 +123,6 @@ function M.accept_all()
   end
 
   local bufnr = M.state.bufnr
-  local insert_row = M.state.above and M.state.start_row or (M.state.start_row + 1)
 
   local remaining = {}
   for i = M.state.accepted_count + 1, #M.state.lines do
@@ -125,7 +130,13 @@ function M.accept_all()
   end
 
   if #remaining > 0 then
-    vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, remaining)
+    if M.state.replace_line and not M.state.line_replaced then
+      -- Replace the @ai line with the first suggestion line, then insert the rest
+      vim.api.nvim_buf_set_lines(bufnr, M.state.start_row, M.state.start_row + 1, false, remaining)
+    else
+      local insert_row = M.state.above and M.state.start_row or (M.state.start_row + 1)
+      vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, remaining)
+    end
   end
 
   M.clear()
@@ -139,19 +150,25 @@ function M.accept_line()
   end
 
   local bufnr = M.state.bufnr
-  local insert_row
-  if M.state.above then
-    insert_row = M.state.start_row
-  else
-    insert_row = M.state.start_row + 1
-  end
-
   local next_line = M.state.lines[M.state.accepted_count + 1]
 
-  vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, { next_line })
+  if M.state.replace_line and not M.state.line_replaced then
+    -- First line replaces the @ai line
+    vim.api.nvim_buf_set_lines(bufnr, M.state.start_row, M.state.start_row + 1, false, { next_line })
+    M.state.line_replaced = true
+    -- start_row stays the same since we replaced, not inserted
+  else
+    local insert_row
+    if M.state.above then
+      insert_row = M.state.start_row
+    else
+      insert_row = M.state.start_row + 1
+    end
+    vim.api.nvim_buf_set_lines(bufnr, insert_row, insert_row, false, { next_line })
+    M.state.start_row = M.state.start_row + 1
+  end
 
   M.state.accepted_count = M.state.accepted_count + 1
-  M.state.start_row = M.state.start_row + 1
 
   if M.state.accepted_count >= #M.state.lines then
     M.clear()

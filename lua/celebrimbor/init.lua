@@ -39,6 +39,10 @@ function M.setup(opts)
   vim.api.nvim_create_user_command('CelebrimborHealth', function()
     vim.cmd('checkhealth celebrimbor')
   end, { desc = 'Check Celebrimbor health' })
+
+  vim.api.nvim_create_user_command('CelebrimborInline', function()
+    M.generate_inline()
+  end, { desc = 'Generate code from @ai instruction' })
 end
 
 function M.setup_keymaps()
@@ -100,6 +104,10 @@ function M.setup_keymaps()
   vim.keymap.set('n', keymaps.docstring, function()
     M.generate_docstring()
   end, { desc = 'Celebrimbor: Generate docstring' })
+
+  vim.keymap.set('n', keymaps.inline, function()
+    M.generate_inline()
+  end, { desc = 'Celebrimbor: Generate inline @ai' })
 end
 
 function M.setup_autocmds()
@@ -290,6 +298,48 @@ function M.format_docstring(docstring)
   end
 
   return table.concat(cleaned, '\n')
+end
+
+function M.generate_inline()
+  local ctx, err = context.gather_inline()
+  if not ctx then
+    vim.notify('Celebrimbor: ' .. (err or 'Could not gather inline context'), vim.log.levels.WARN)
+    return
+  end
+
+  suggestions.clear()
+  spinner.start()
+
+  ctx.user_context = M.user_context
+  local messages = prompt.inline.build_messages(ctx)
+
+  local ai_row = ctx.ai_row
+
+  bedrock.invoke_async(messages, {
+    system = prompt.inline.system_prompt,
+  }, function(result, api_err)
+    spinner.stop()
+
+    if api_err then
+      vim.notify('Celebrimbor: ' .. tostring(api_err), vim.log.levels.ERROR)
+      return
+    end
+
+    if not result.content or result.content == '' then
+      vim.notify('Celebrimbor: Empty response from API', vim.log.levels.WARN)
+      return
+    end
+
+    local trimmed = vim.trim(result.content)
+    if trimmed == '' then
+      vim.notify('Celebrimbor: Response contains only whitespace', vim.log.levels.WARN)
+      return
+    end
+
+    -- Store the ai_row in opts for the ghost to know which line to replace
+    suggestions.add(result.content, ctx, { above = false, row = ai_row, replace_line = true }, 'inline')
+    M.show_current_suggestion()
+  end)
 end
 
 function M.clear()
