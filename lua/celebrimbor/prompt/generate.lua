@@ -70,10 +70,6 @@ function M.build(ctx)
     add_section(parts, 'Documentation', ctx.comment)
   end
 
-  if ctx.user_context then
-    add_section(parts, 'Ultimate Goal', ctx.user_context)
-  end
-
   if ctx.body_content then
     table.insert(parts, 'Complete this function (continue from existing code):')
     table.insert(parts, ctx.signature)

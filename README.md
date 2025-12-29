@@ -19,6 +19,7 @@ In the depths of Eregion, the greatest elven smith of the Second Age labored at 
 - **Rich context gathering** - Current file, harpoon files, neighboring files, imported local packages
 - **Partial function support** - Continue implementing functions with existing code
 - **Docstring generation** - Generate Go doc comments for functions
+- **Inline @ai generation** - Write `// @ai your instruction` and generate code to replace it
 - **Multiple suggestions** - Cycle through alternative implementations
 - **AWS Bedrock integration** - Leverages Claude via your existing AWS infrastructure
 
@@ -70,13 +71,15 @@ require('celebrimbor').setup({
     next_suggestion = '<leader>cn',
     prev_suggestion = '<leader>cp',
     dismiss = '<Esc>',
-    set_context = '<leader>cs',
     docstring = '<leader>cd',
+    inline = '<leader>ci',
   },
 })
 ```
 
 ## Usage
+
+### Code Generation
 
 1. Write a function signature in a Go file
 2. Position your cursor inside the function body (empty or partial)
@@ -84,12 +87,25 @@ require('celebrimbor').setup({
 4. Ghost text appears with the suggested implementation
 5. Press `<Tab>` to accept all, `<leader>cl` to accept line-by-line, or `<Esc>` to dismiss
 
+### Inline @ai Generation
+
+1. Write a comment with `@ai` followed by your instruction:
+   ```go
+   func fetchUser(id string) (*User, error) {
+       // @ai fetch user from database by id and handle errors
+   }
+   ```
+2. Position your cursor on the `@ai` line
+3. Press `<leader>ci` to generate code
+4. The generated code replaces the `@ai` comment line
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `:Celebrimbor` | Trigger code generation |
 | `:CelebrimborDocstring` | Generate docstring for function |
+| `:CelebrimborInline` | Generate code from @ai instruction |
 | `:CelerimborClear` | Clear current suggestion |
 | `:CelebrimborHealth` | Check plugin health |
 
@@ -106,7 +122,6 @@ Run `:checkhealth celebrimbor` to verify your setup.
 
 ### New Capabilities
 - [ ] Fix diagnostics - Use LSP errors as context, generate fix
-- [ ] Generate from comments - Write a TODO comment, generate implementation
 
 ### Future Vision
 - [ ] LSP server - Standalone Language Server Protocol implementation

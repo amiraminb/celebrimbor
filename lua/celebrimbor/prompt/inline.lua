@@ -70,10 +70,6 @@ function M.build(ctx)
     add_section(parts, 'Function documentation', ctx.comment)
   end
 
-  if ctx.user_context then
-    add_section(parts, 'Ultimate Goal', ctx.user_context)
-  end
-
   table.insert(parts, 'Current function:')
   table.insert(parts, ctx.signature)
   table.insert(parts, '')

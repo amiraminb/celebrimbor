@@ -8,7 +8,6 @@ local ghost = require('celebrimbor.ghost')
 local spinner = require('celebrimbor.spinner')
 local suggestions = require('celebrimbor.suggestions')
 
-M.user_context = nil
 
 function M.setup(opts)
   config.setup(opts)
@@ -88,19 +87,6 @@ function M.setup_keymaps()
     end
   end, { desc = 'Celebrimbor: Previous suggestion' })
 
-  vim.keymap.set('n', keymaps.set_context, function()
-    vim.ui.input({ prompt = 'Celebrimbor context: ', default = M.user_context or '' }, function(input)
-      if input then
-        M.user_context = input ~= '' and input or nil
-        if M.user_context then
-          vim.notify('Celebrimbor: Context set', vim.log.levels.INFO)
-        else
-          vim.notify('Celebrimbor: Context cleared', vim.log.levels.INFO)
-        end
-      end
-    end)
-  end, { desc = 'Celebrimbor: Set context' })
-
   vim.keymap.set('n', keymaps.docstring, function()
     M.generate_docstring()
   end, { desc = 'Celebrimbor: Generate docstring' })
@@ -134,7 +120,6 @@ function M.generate()
   suggestions.clear()
   spinner.start()
 
-  ctx.user_context = M.user_context
   local messages = prompt.generate.build_messages(ctx)
 
   local insert_row = M.get_insert_row(ctx)
@@ -310,7 +295,6 @@ function M.generate_inline()
   suggestions.clear()
   spinner.start()
 
-  ctx.user_context = M.user_context
   local messages = prompt.inline.build_messages(ctx)
 
   local ai_row = ctx.ai_row
