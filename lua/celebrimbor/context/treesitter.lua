@@ -11,14 +11,51 @@ function M.get_enclosing_function()
     return nil
   end
 
-  while node do
-    local node_type = node:type()
+  -- First, try traversing up from current node
+  local current = node
+  while current do
+    local node_type = current:type()
     for _, func_type in ipairs(FUNCTION_TYPES) do
       if node_type == func_type then
-        return node
+        return current
       end
     end
-    node = node:parent()
+    current = current:parent()
+  end
+
+  -- If not found, check if cursor is within any function's range
+  -- This handles edge cases like cursor on closing brace
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local cursor_row = cursor[1] - 1 -- 0-indexed
+  local cursor_col = cursor[2]
+
+  local bufnr = vim.api.nvim_get_current_buf()
+  local parser = vim.treesitter.get_parser(bufnr, 'go')
+  if not parser then
+    return nil
+  end
+
+  local tree = parser:parse()[1]
+  local root = tree:root()
+
+  for child in root:iter_children() do
+    local child_type = child:type()
+    for _, func_type in ipairs(FUNCTION_TYPES) do
+      if child_type == func_type then
+        local start_row, start_col, end_row, end_col = child:range()
+        -- Check if cursor is within function range (inclusive of end)
+        if cursor_row >= start_row and cursor_row <= end_row then
+          if cursor_row == start_row and cursor_col < start_col then
+            goto continue
+          end
+          if cursor_row == end_row and cursor_col > end_col then
+            goto continue
+          end
+          return child
+        end
+      end
+    end
+    ::continue::
   end
 
   return nil

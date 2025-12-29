@@ -226,4 +226,66 @@ function M.gather_inline()
   }
 end
 
+-- Gather context for diagnostic fix
+-- Uses the same context as regular gather() but adds diagnostic information
+function M.gather_diagnostic()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local diagnostic_row = cursor[1] - 1 -- 0-indexed
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Get diagnostics on the current line
+  local diagnostics = vim.diagnostic.get(bufnr, { lnum = diagnostic_row })
+  if #diagnostics == 0 then
+    return nil, 'No diagnostics found on current line'
+  end
+
+  -- Get the current line content
+  local diagnostic_line = vim.api.nvim_buf_get_lines(bufnr, diagnostic_row, diagnostic_row + 1, false)[1] or ''
+
+  -- Get the standard context (function, comments, etc.)
+  local func_ctx = ts.get_function_context()
+  if not func_ctx then
+    return nil, 'Cursor is not inside a function'
+  end
+
+  local file_path = vim.fn.expand('%:p')
+  local file_name = vim.fn.expand('%:t')
+  local prefix, suffix = file_ctx.get_prefix_suffix(func_ctx.node)
+
+  return {
+    -- Standard context
+    signature = func_ctx.signature,
+    is_empty = func_ctx.is_empty,
+    body_content = func_ctx.body_content,
+    comment = func_ctx.comment,
+    is_method = func_ctx.is_method,
+    receiver_type = func_ctx.receiver_type,
+
+    file_path = file_path,
+    file_name = file_name,
+    package_name = M.get_package_name(),
+    language = 'go',
+
+    current_file = file_ctx.get_content(),
+    prefix = prefix,
+    suffix = suffix,
+
+    imports = M.get_imports(),
+    type_definition = func_ctx.receiver_type and M.get_type_definition(func_ctx.receiver_type),
+    other_functions = M.get_other_functions(func_ctx.node),
+
+    harpoon_files = harpoon_ctx.get_files(),
+    neighboring_files = neighbors_ctx.get_files(),
+    imported_files = imports_ctx.get_local_files(),
+
+    func_node = func_ctx.node,
+    body_node = func_ctx.body_node,
+
+    -- Diagnostic-specific context
+    diagnostics = diagnostics,
+    diagnostic_row = diagnostic_row,
+    diagnostic_line = diagnostic_line,
+  }
+end
+
 return M

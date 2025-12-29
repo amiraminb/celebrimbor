@@ -31,6 +31,7 @@ M.defaults = {
     dismiss = '<Esc>',
     docstring = '<leader>cd',
     inline = '<leader>ci',
+    fix = '<leader>cf',
   },
 }
 

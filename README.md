@@ -20,6 +20,7 @@ In the depths of Eregion, the greatest elven smith of the Second Age labored at 
 - **Partial function support** - Continue implementing functions with existing code
 - **Docstring generation** - Generate Go doc comments for functions
 - **Inline @ai generation** - Write `// @ai your instruction` and generate code to replace it
+- **Diagnostic fix** - Fix LSP errors/warnings on the current line with AI
 - **Multiple suggestions** - Cycle through alternative implementations
 - **AWS Bedrock integration** - Leverages Claude via your existing AWS infrastructure
 
@@ -73,6 +74,7 @@ require('celebrimbor').setup({
     dismiss = '<Esc>',
     docstring = '<leader>cd',
     inline = '<leader>ci',
+    fix = '<leader>cf',
   },
 })
 ```
@@ -99,6 +101,13 @@ require('celebrimbor').setup({
 3. Press `<leader>ci` to generate code
 4. The generated code replaces the `@ai` comment line
 
+### Diagnostic Fix
+
+1. Position your cursor on a line with LSP diagnostics (errors/warnings)
+2. Press `<leader>cf` to generate a fix
+3. The AI analyzes the diagnostic messages and generates fixed code
+4. The suggestion replaces the problematic line
+
 ## Commands
 
 | Command | Description |
@@ -106,6 +115,7 @@ require('celebrimbor').setup({
 | `:Celebrimbor` | Trigger code generation |
 | `:CelebrimborDocstring` | Generate docstring for function |
 | `:CelebrimborInline` | Generate code from @ai instruction |
+| `:CelebrimborFix` | Fix diagnostic on current line |
 | `:CelerimborClear` | Clear current suggestion |
 | `:CelebrimborHealth` | Check plugin health |
 
@@ -119,9 +129,6 @@ Run `:checkhealth celebrimbor` to verify your setup.
 - [ ] Auto-suggest on typing pause (Copilot-style, opt-in)
 - [ ] Embeddings for relevance ranking (smarter context selection)
 - [ ] Smarter multiple suggestions
-
-### New Capabilities
-- [ ] Fix diagnostics - Use LSP errors as context, generate fix
 
 ### Future Vision
 - [ ] LSP server - Standalone Language Server Protocol implementation
